@@ -5,9 +5,16 @@ import 'package:gravlift_workout_tracker_app/pages/auth/AuthPage.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-//Temporary hardcoding here:
-const String url = "";
-const String key = "";
+/*
+  These are AMBIENT VARIABLES, so these 2 aren't exposed to the public on github.
+  How it works: Define ambient variables on Android Studio in this case and when the IDE reads
+  'String.fromEnvironment("SUPABASE_URL")', it searches env variables and when main is run these fields are completed.
+  (Also when building the APK specify through terminal these variables)
+  {Not 100% Secure as it's possible to see these variables in the apk going through the binary, but the RLS is what matters.}
+*/
+const String url = String.fromEnvironment("SUPABASE_URL");
+const String key = String.fromEnvironment("SUPABASE_ANON_KEY");
+
 
 //supabaseClient is now the current instance client, so by initializing it below, it modies the
 //current client, and therefore modifies this variable which refers to it
