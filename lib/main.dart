@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 //Temporary hardcoding here:
-const String url = "https://uaxmydtigrqekvidmzkt.supabase.co";
-const String key = "sb_publishable_4dITghu_svJ6q3WD9syKcA_qtL0ALqV";
+const String url = "";
+const String key = "";
 
 //supabaseClient is now the current instance client, so by initializing it below, it modies the
 //current client, and therefore modifies this variable which refers to it
