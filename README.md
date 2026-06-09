@@ -142,76 +142,6 @@ Visit [Issues](https://github.com/tungstenFed/GravLift-Workout-Tracker-App/issue
 
 ---
 
-## 🤝 Contributing
-
-We love contributions! Whether it's code, design, translation, or documentation.
-
-### Getting Started
-1. **Fork** the repo
-2. **Clone** your fork: `git clone https://github.com/YOUR_USERNAME/GravLift-Workout-Tracker-App.git`
-3. **Create feature branch**: `git checkout -b feature/your-feature-name`
-4. **Make changes** and test thoroughly
-5. **Commit**: `git commit -m "Add: your feature description"`
-6. **Push**: `git push origin feature/your-feature-name`
-7. **Open PR** with detailed description
-
-### Contribution Ideas
-- 🐛 Bug fixes
-- ✨ UI improvements
-- 📱 Platform support (iOS, Web, Desktop)
-- 🌍 Translations
-- 📖 Documentation
-- 🧪 Tests
-- 🎨 Design assets
-
-### Code Guidelines
-- Follow Dart [style guide](https://dart.dev/guides/language/effective-dart/style)
-- Use meaningful variable names
-- Comment complex logic
-- Test your changes locally before PR
-- Keep commits small and atomic
-
----
-
-## 📊 Project Structure
-
-```
-GravLift-Workout-Tracker-App/
-├── lib/
-│   ├── main.dart                 # App entry point
-│   ├── screens/                  # UI screens
-│   │   ├── login_screen.dart
-│   │   ├── home_screen.dart
-│   │   ├── workout_log_screen.dart
-│   │   └── ...
-│   ├── widgets/                  # Reusable UI components
-│   │   ├── custom_drawer.dart
-│   │   ├── workout_card.dart
-│   │   └── ...
-│   ├── models/                   # Data models
-│   │   ├── user_model.dart
-│   │   ├── workout_model.dart
-│   │   └── ...
-│   ├── services/                 # Backend services
-│   │   ├── supabase_service.dart
-│   │   ├── auth_service.dart
-│   │   └── ...
-│   └── utils/                    # Utilities
-│       ├── constants.dart
-│       ├── themes.dart
-│       └── ...
-├── assets/
-│   └── images/                   # App assets
-├── android/                      # Android-specific code
-├── ios/                          # iOS-specific code
-├── web/                          # Web version
-├── test/                         # Unit & widget tests
-├── pubspec.yaml                  # Dependencies & metadata
-└── README.md                     # This file
-```
-
----
-
 ## 🎨 Design System
 
 ### Colors (Deep Purple Theme)
@@ -242,43 +172,9 @@ Colors.grey[300]          // Secondary text
 - ✅ **HTTPS Only** - Supabase enforces encrypted connections
 - ✅ **No Tracking** - Zero analytics/ads
 
-### Reporting Security Issues
-Found a security vulnerability? **Don't** open a public issue. Instead:
-1. Email: [security contact - add your email]
-2. Include: Description, reproduction steps, impact
-3. We'll respond within 48 hours
-
----
-
-## 📈 Roadmap
-
-### v0.2.0 (Next Sprint - July 2026)
-- [ ] Workout program templates
-- [ ] Basic progress charts
-- [ ] Rest timer between sets
-- [ ] Workout history export
-
-### v0.3.0 (Q3 2026)
-- [ ] Apple Watch integration
-- [ ] Offline-first mode
-- [ ] Multiple workouts per day
-- [ ] Community leaderboard
-
-### v1.0.0 (Late 2026)
-- [ ] AI-powered form feedback
-- [ ] Social sharing
-- [ ] Nutrition tracker
-- [ ] Wearable integration
-
-See [GitHub Projects](https://github.com/tungstenFed/GravLift-Workout-Tracker-App/projects) for detailed tracking.
-
 ---
 
 ## 💬 Community & Support
-
-### Discord Server
-Join our growing community for real-time discussion, help, and feedback:
-**[Join Discord](https://discord.gg/GRAVLIFT)** *(link coming soon)*
 
 ### Get Help
 - 📖 **Documentation**: Check the [Wiki](https://github.com/tungstenFed/GravLift-Workout-Tracker-App/wiki)
@@ -316,19 +212,6 @@ Your support helps with:
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file for details.
-
-This means you can:
-- ✅ Use it for personal/commercial projects
-- ✅ Modify the code
-- ✅ Distribute it
-- ✅ Use it privately
-
-Just include the original license!
-
----
 
 ## 🙏 Acknowledgments
 
