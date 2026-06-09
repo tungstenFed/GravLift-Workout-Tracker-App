@@ -10,7 +10,6 @@
 
 **Track your gym & calisthenics workouts effortlessly with a beautiful, dark-themed mobile app**
 
-[Features](#features) • [Installation](#installation) • [Contributing](#contributing) • [Roadmap](#roadmap) • [Support](#support)
 
 </div>
 
