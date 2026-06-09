@@ -13,6 +13,7 @@
 
 </div>
 
+![GravLift Logo](https://raw.githubusercontent.com/tungstenFed/GravLift-Workout-Tracker-App/main/gravlift_play_store_banner_1.svg)
 ---
 
 ## 📱 About GravLift
