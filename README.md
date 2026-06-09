@@ -40,6 +40,7 @@
 - 🎨 **Beautiful UI** - Intuitive navigation with custom Drawer menu
 - 🔐 **Secure Auth** - Supabase Row Level Security (RLS)
 - 💾 **Cloud Sync** - Auto-sync workouts across devices
+- **Note:** - Exercises database is still in heavy development. Current exercises are temporary and a better version will come up later.
 
 ### Roadmap (Planned)
 - 🎥 **Form Videos** - Exercise form guidance
@@ -74,46 +75,6 @@
 3. Install on your Android device
 4. Create an account and start logging workouts!
 
-#### Option 2: Build from Source
-
-**Prerequisites:**
-- Flutter SDK 3.0+
-- Dart 3.0+
-- Android Studio / Xcode (for device testing)
-- Git
-
-**Steps:**
-```bash
-# Clone the repository
-git clone https://github.com/tungstenFed/GravLift-Workout-Tracker-App.git
-cd GravLift-Workout-Tracker-App
-
-# Get dependencies
-flutter pub get
-
-# Run on Android device/emulator
-flutter run
-
-# Or build APK
-flutter build apk --release
-
-# Or build iOS (macOS only)
-flutter build ios --release
-```
-
-#### Environment Variables
-GravLift uses environment variables for secure credential storage:
-
-```bash
-# Create a `.env` file (never commit this!)
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-
-# Build with environment variables
-flutter run --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-```
-
----
 
 ## 🧪 Beta Testing
 
