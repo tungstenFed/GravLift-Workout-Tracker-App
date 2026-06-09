@@ -40,6 +40,7 @@
 - 🔐 **Secure Auth** - Supabase Row Level Security (RLS)
 - 💾 **Cloud Sync** - Auto-sync workouts across devices
 - **Note:** - Exercises database is still in heavy development. Current exercises are temporary and a better version will come up later.
+- Missing logout, password reset, password forgotten features. Re-install to change account.
 
 ### Roadmap (Planned)
 - 🎥 **Form Videos** - Exercise form guidance
