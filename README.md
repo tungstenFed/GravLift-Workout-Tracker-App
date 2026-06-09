@@ -13,8 +13,12 @@
 
 </div>
 
-![GravLift Logo](https://raw.githubusercontent.com/tungstenFed/GravLift-Workout-Tracker-App/main/gravlift_play_store_banner_1.svg)
----
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+  <img src="https://raw.githubusercontent.com/tungstenFed/GravLift-Workout-Tracker-App/main/gl2.jpeg" alt="Workout Log" width="180">
+  <img src="https://raw.githubusercontent.com/tungstenFed/GravLift-Workout-Tracker-App/main/gl1.jpeg" alt="Progress Tracking" width="180">
+  <img src="https://raw.githubusercontent.com/tungstenFed/GravLift-Workout-Tracker-App/main/gl3.jpeg" alt="Dark Theme UI" width="180">
+  <img src="https://raw.githubusercontent.com/tungstenFed/GravLift-Workout-Tracker-App/main/gl4.jpeg" alt="Dark Theme UI" width="180">
+</div>
 
 ## 📱 About GravLift
 
