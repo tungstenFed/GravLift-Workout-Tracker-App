@@ -351,7 +351,8 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
                     exercisesOrder++;
                   }
                 },
-                label: "Add Exercise")
+                label: "Add Exercise"),
+              SizedBox(height: 50),
           ],
         ),
       ),

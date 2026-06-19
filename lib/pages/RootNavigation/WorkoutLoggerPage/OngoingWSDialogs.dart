@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -82,19 +84,30 @@ void gravLiftConfirmSessionDialog(BuildContext contextPage){
                       manager.workoutSession?.name = name;
                       manager.workoutSession?.end_time = DateTime.now();
 
-                      try{
-                        await manager.insertWorkoutDataInDb(manager.workoutSession!); //Wait it's fully inserted in the db
-                        manager.removeSession(); //Once its done delete the session from app
-                        manager.clearSharedPreferences();
+                      try {
+                        if(manager.internetConnection){
+                          await manager.insertWorkoutDataInDb(manager.workoutSession!); //Wait it's fully inserted in the db
+                          manager.removeSession(); //Once its done delete the session from app
+                          manager.clearSharedPreferences(); //Of active workout sessions
 
-                        //Re-Fetch to update the profilePage's history
-                        manager.reFetchHistory();
+                          //Re-Fetch to update the profilePage's history
+                          manager.reFetchHistory();
+                          Navigator.pop(contextPage); //parent widget
+                          Navigator.pop(context); //Dialog
+                        } else {
+                          manager.saveOfflineWSToSharedPref();
 
-                        Navigator.pop(contextPage);  //parent widget
-                        Navigator.pop(context); //Dialog
-                      }catch(e){
-                        //Needed because if an error is thrown, some data will be added to db and some not, so every error deletes every remains
-                        //So on the next 'Submit' we're clear!
+                          manager.removeSession();
+                          manager.clearSharedPreferences();
+
+                          manager.reFetchHistory();
+                          Navigator.pop(contextPage); //parent widget
+                          Navigator.pop(context); //Dialog
+                        }
+                      }
+                      catch(e){
+                        //Every other exception but SocketException (No internet)
+                        //Needed because if an error is thrown, some data will be added to db and some not, so every error deletes every remains So on the next 'Submit' we're clear!
                         manager.deleteAllWorkoutDataForThisUser();
                         setStateDialog((){
                           exMsg = "Please check that every set's information is properly inserted.";

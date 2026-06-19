@@ -1,4 +1,4 @@
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:gravlift_workout_tracker_app/WorkoutDataManager%20(changeNotifier)/WorkoutDataManager.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerPage/WorkoutLoggerPage.dart';
@@ -32,11 +32,11 @@ class _RootNavigationState extends State<RootNavigation>{
   @override
   initState(){
     super.initState();
+    WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
     //Check for any last active sessions
-    Provider.of<WorkoutDataManager>(context, listen: false).loadFromSharedPreferences();
+    manager.loadFromSharedPreferences();
 
   }
-
   List<Widget> pagesList = [
     ProfilePage(), // 0
     CatalogPage(), // 1
@@ -65,6 +65,7 @@ class _RootNavigationState extends State<RootNavigation>{
             ),
           //-End Actual Page shown-
 
+          //----ONGOING WS BAR---
           if(( manager.workoutSession != null ? true : false) == true)
            Positioned(
             bottom: 10,
@@ -104,7 +105,34 @@ class _RootNavigationState extends State<RootNavigation>{
                  ),
                ),
              )
-          ) else SizedBox() //Blank widget
+          ) else SizedBox(), //Blank widget
+
+          //----NO CONNECTION WIDGET---
+          if(manager.internetConnection == false)
+            Positioned(
+                bottom: 90,
+                left: 70,
+                right: 70,
+                child: Container(
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.redAccent, width: 0.8),
+                        borderRadius: BorderRadiusGeometry.all(Radius.circular(20))
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Material(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: ListTile(
+                        leading: const Icon(Icons.signal_wifi_connected_no_internet_4, color: Colors.redAccent, size: 16),
+                        title: gravLiftText(text: "No Internet Connection", size: 14),
+                        titleAlignment: ListTileTitleAlignment.center,
+                      ),
+                    ),
+                  ),
+                )
+            ) else SizedBox() //Blank widget
         ],
       ),
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gravlift_workout_tracker_app/WorkoutDataManager%20(changeNotifier)/WorkoutDataManager.dart';
 import 'package:gravlift_workout_tracker_app/pages/templates/widgetsTemplates.dart';
+import 'package:provider/provider.dart';
 import 'authFunctions.dart';
 
 
@@ -18,6 +20,7 @@ class _SignUpPageState extends State<SignUpPage>{
 
   @override
   Widget build(BuildContext context) {
+    WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Padding(
@@ -128,7 +131,7 @@ class _SignUpPageState extends State<SignUpPage>{
             //---Confirm Btn--
             gravLiftFabExt(
                 onPressed: () async {
-                  exceptionMessage = await signUpAthlete(email: email, password: password, context: context);
+                  exceptionMessage = await signUpAthlete(email: email, password: password, context: context, manager: manager);
                   setState(() {
                   });
                 },

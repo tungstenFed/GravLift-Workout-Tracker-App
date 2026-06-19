@@ -50,8 +50,8 @@ class ExerciseSet {
       seconds: jsonMap["seconds"],
       type: jsonMap["type"], //not null, always ''
       rpe: jsonMap["rpe"], //always 0 not null
-      weightController: TextEditingController(text: jsonMap["weight"] ?? ""), //When creating the obj, create here controllers instead of passing them
-      repsController: TextEditingController(text: jsonMap["reps"] ?? ""),
+      weightController: TextEditingController(text: jsonMap["weight"].toString()), //When creating the obj, create here controllers instead of passing them
+      repsController: TextEditingController(text: jsonMap["reps"].toString()),
     );
   }
 

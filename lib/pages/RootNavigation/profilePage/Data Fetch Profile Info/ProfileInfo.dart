@@ -27,11 +27,25 @@ class ProfileInfo {
     required this.height,
   });
 
-  factory ProfileInfo.fromMap(Map<String,dynamic> map){
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': user_id,
+      'username': username,
+      'bio': bio,
+      'email': email,
+      'age': age,
+      'kg_or_lbs': kg_or_lbs,
+      'cm_or_inches': cm_or_inches,
+      'km_or_miles': km_or_miles,
+      'male_female': male_female,
+      'pfp_url': pfp_url,
+      'weight': weight,
+      'height': height,
+    };
+  }
 
-    map.forEach((key,value){
-      print("$key, $value, ${value.runtimeType}");
-    });
+  factory ProfileInfo.fromMap(Map<String,dynamic> map){
+    //Use this either from a supabase map or a map got from json
     return ProfileInfo(
         user_id: map["user_id"],
         username: map["username"],

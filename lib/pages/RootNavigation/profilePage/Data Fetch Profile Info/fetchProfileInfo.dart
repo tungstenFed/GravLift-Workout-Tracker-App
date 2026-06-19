@@ -1,18 +1,18 @@
+import 'package:gravlift_workout_tracker_app/WorkoutDataManager%20(changeNotifier)/WorkoutDataManager.dart';
 import 'package:gravlift_workout_tracker_app/main.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/Data%20Fetch%20Profile%20Info/ProfileInfo.dart';
 import 'package:gravlift_workout_tracker_app/pages/auth/authFunctions.dart';
 
 
 Future<ProfileInfo> fetchProfileInfo() async {
-  print("DEBUG: Inizio caricamento...");
-  Map<String,dynamic> profileInfoMap;
-  profileInfoMap = await supabaseClient.from("profiles").select().eq("user_id", user_id).single();
+    //If there's internet
+    print("DEBUG: start fetch profileinfo...");
+    Map<String,dynamic> profileInfoMap;
+    profileInfoMap = await supabaseClient.from("profiles").select().eq("user_id", user_id).single();
 
-  Map<String,dynamic> profileStats = await supabaseClient.from("profiles_stats").select().eq("user_id", user_id).single();
-  profileInfoMap.addAll(profileStats);
-  print("DEBUG: fatto...");
+    Map<String,dynamic> profileStats = await supabaseClient.from("profiles_stats").select().eq("user_id", user_id).single();
+    profileInfoMap.addAll(profileStats);
 
-
-  return ProfileInfo.fromMap(profileInfoMap);
-
+    print("DEBUG: done fetch profileinfo...");
+    return ProfileInfo.fromMap(profileInfoMap);
 }

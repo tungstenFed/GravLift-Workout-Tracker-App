@@ -85,11 +85,18 @@ Widget gravLiftExceptionText(String? message){
   );
 }
 
-Widget gravLiftFabExt({required Function() onPressed, required String label, double fontSize = 20, })
-{
+Widget gravLiftFabExt({required Function() onPressed, required String label, double fontSize = 20,}) {
+  //Decoration-------------------------------
   return FloatingActionButton.extended(
     onPressed: onPressed,
     heroTag: null,
+    backgroundColor: Colors.deepPurpleAccent.shade400,
+    foregroundColor: Colors.white,
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    // ----------------------------------------
     label: Text(
       label,
       style: GoogleFonts.aleo(

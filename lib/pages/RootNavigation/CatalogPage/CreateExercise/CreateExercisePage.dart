@@ -87,7 +87,7 @@ class CreateExercisePageState extends State<CreateExercisePage>{
                 confirmCustomExDialog(
                     context, name, generatedExerciseId,
                     isBodyweight, isCardio, isBandAssisted, isIsometric,
-                    imageUrl,  involvedMuscle, musclegroup, isCustomExercise
+                    imageUrl,  involvedMuscle, musclegroup, isCustomExercise, ()=>setState(() {})
                 );
               }
             },
@@ -345,7 +345,8 @@ void discardCustomExDialog(BuildContext contextPage, String exId) {
     },
   );
 }
-void confirmCustomExDialog(BuildContext contextPage,String name, String exId, bool isBW, bool isCardio, bool isBA, bool isIso, String imageUrl, String muscle_trained, String muscle_group, bool isCustomExercise){
+void confirmCustomExDialog(BuildContext contextPage,String name, String exId, bool isBW, bool isCardio, bool isBA, bool isIso, String imageUrl, String muscle_trained, String muscle_group, bool isCustomExercise, Function() setState){
+
 
   bool isSubmitLoading = false;
   showDialog(
@@ -372,7 +373,6 @@ void confirmCustomExDialog(BuildContext contextPage,String name, String exId, bo
                     for(String element in splitName){
                       yt_Link = yt_Link + "$element+ "; //Update the search_query every iteration. last has " " at the end.
                     }
-
                     ExerciseCatalog customExercise = ExerciseCatalog(
                       id: exId.toString(),
                       exercise_name: name,
@@ -387,8 +387,16 @@ void confirmCustomExDialog(BuildContext contextPage,String name, String exId, bo
                       exercise_image_filename: imageUrl,
                       isCustomExercise: isCustomExercise,
                     );
-                    await manager.createCustomExerciseInDb(customExercise);
-                    await manager.reFetchExerciseCatalogList(); //TO show new ex
+
+                    if(manager.internetConnection){
+                      await manager.createCustomExerciseInDb(customExercise);
+                      await manager.reFetchExerciseCatalogList(); //TO show new ex
+                      manager.saveExCatalogToSharedPref();
+                    } else {
+                      //Pending cEx, uploaded on internet
+                      manager.saveCustomExToSharedPref(customExercise);
+                    }
+
 
                     Navigator.pop(context);
                     Navigator.pop(contextPage);
@@ -396,6 +404,7 @@ void confirmCustomExDialog(BuildContext contextPage,String name, String exId, bo
                   },
                   child: const Text('Confirm'),
                 ),
+
 
               ],
             ),

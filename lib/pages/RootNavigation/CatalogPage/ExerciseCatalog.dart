@@ -85,5 +85,6 @@ Future< List<ExerciseCatalog> > fetchExerciseCatalogInfo() async {
     exerciseCatalogObjList.add(ExerciseCatalog.fromMap(row));
   }
   print("DEBUG: end fetchExerciseCatalogInfo...");
+
   return exerciseCatalogObjList;
 }

@@ -47,7 +47,7 @@ class WorkoutSession //from Map to Obj
       exercisesList: [] //Filled while building each object
     );
   }
-//TODO: fix preferences error
+
   @override
   String toString() {
     // Just call this to print everything about the WS. made with gemini just to debug, and save a lot of time.

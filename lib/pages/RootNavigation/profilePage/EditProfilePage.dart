@@ -19,6 +19,7 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage>{
+  //Onload if no internet fetch from SP if there's one already saved (Almost always since the creation of the profile)
 
   @override
   void initState() { //fetch user id and username to check if already exists
@@ -44,12 +45,15 @@ class _EditProfilePageState extends State<EditProfilePage>{
   String? exceptionMessage = "";
   String? imgPickedUrl = "";
   final ScrollController _scrollController = ScrollController();
+  String sharedPrefPfpPath = "";
   //---
 
   void fetchPfpUrl() async {
     WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
+
     ProfileInfo profileInfo = await manager.profileInfo;
     imgPickedUrl = profileInfo.pfp_url;
+    sharedPrefPfpPath = await manager.loadPfpFromSharedPref();
     setState(() {});
   }
   void checkUniqueUsername(String username) async {
@@ -134,9 +138,6 @@ class _EditProfilePageState extends State<EditProfilePage>{
               children: [
                 CircleAvatar(
                   radius: 100,
-
-                  foregroundImage: imgPickedUrl == null || imgPickedUrl == ""
-                    ? AssetImage("assets/images/avatar.jpg")
                   /*
                     Added ?=t... to modify the url so it's different everytime its created, because
                     if it isn't added, the pfp isn't updated since flutter sees 2 same urls when you upload
@@ -145,8 +146,16 @@ class _EditProfilePageState extends State<EditProfilePage>{
 
                     [if flutter sees 2 same urls, he ignored the second thinking he already loaded it!]
                   */
-                    : NetworkImage('$imgPickedUrl?t=${DateTime.now().millisecondsSinceEpoch}'),
-                  backgroundColor: Colors.black,
+                foregroundImage:
+                manager.internetConnection == true
+                  ? (imgPickedUrl == null || imgPickedUrl  == "")
+                      ? AssetImage("assets/images/avatar.jpg")
+                      : NetworkImage('$imgPickedUrl?t=${DateTime.now().millisecondsSinceEpoch}')
+                  :  (sharedPrefPfpPath.isNotEmpty)
+                      ? FileImage(File(sharedPrefPfpPath))
+                      : AssetImage("assets/images/avatar.jpg"),
+
+        backgroundColor: Colors.black,
                   child: placeHolderIcon,
                 ),
                 //change icon
@@ -159,8 +168,11 @@ class _EditProfilePageState extends State<EditProfilePage>{
                     icon: Image.asset('assets/images/changes.png'),
 
                     onPressed: () async {
+                        List<String?> img_urlAndPath = [];
+                        img_urlAndPath = await handleImageUpload();
+                        String? url = img_urlAndPath.first;
+                        if(img_urlAndPath.last != null){sharedPrefPfpPath = img_urlAndPath.last!;}
 
-                        var url = await handleImageUpload();
                         setState(() {
                           url == null
                               ? exceptionTriggered = true
@@ -314,7 +326,10 @@ class _EditProfilePageState extends State<EditProfilePage>{
                   if(username == "" || weight == 0 || height == 0 || age == 0){
                     setState((){exceptionTriggered = true; exceptionMessage = "Please fill out all fields.";});
                     scrollToTop();
-                  } else if(!exceptionTriggered) {
+                  } else if(manager.internetConnection == false){
+                    setState((){exceptionTriggered = true; exceptionMessage = "Check your internet connection.";});
+                  }
+                  else if(!exceptionTriggered) {
                     setState((){exceptionTriggered = false; exceptionMessage = "";});
                     //UPDATE and not INSERT, not creating a new row but we're updating it.(Already created in signup, fill out null values
                     //Also if editing later on profile it has to be actually UPDATE
@@ -337,8 +352,26 @@ class _EditProfilePageState extends State<EditProfilePage>{
                           "height": height
                     });
 
-                    manager.reFetchProfileInfo();
+                    //Save to sharedPreferences(ProfileInfo)
+                    ProfileInfo data = ProfileInfo(
+                      user_id: userId,
+                      username: username,
+                      age: age,
+                      bio: bio!,
+                      kg_or_lbs: kgOrLbs!,
+                      cm_or_inches: cmOrInch!,
+                      km_or_miles: kmOrMile!,
+                      male_female: maleOrFemale!,
+                      pfp_url: imgPickedUrl!,
+                      email: supabaseClient.auth.currentUser!.email!,
+                      weight: weight,
+                      height: height,
+                    );
+                    manager.saveProfileInfoToSharedPref(data);
+                    manager.savedPfpToSharedPref(sharedPrefPfpPath);
+                    manager.saveExCatalogToSharedPref(); //When signing up, save.
 
+                    manager.reFetchProfileInfo(); //Reload infos if editing
                     Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (context) => RootNavigation(pageIndex: 0,)),
@@ -356,3 +389,4 @@ class _EditProfilePageState extends State<EditProfilePage>{
     );
   }
 }
+

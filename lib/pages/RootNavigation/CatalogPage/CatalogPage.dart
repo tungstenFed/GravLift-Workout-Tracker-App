@@ -17,21 +17,13 @@ class CatalogPage extends StatefulWidget{
 
 class _CatalogPageState extends State<CatalogPage>{
 
-
-  Future<List<ExerciseCatalog>>? futureExerciseCatalogList; //Full list, no search function used.
-
   List<ExerciseCatalog>? exerciseCatalogList;
   List<ExerciseCatalog>? filteredExerciseList;
   String chosenMuscleGroup = "Chest";
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    loadData();
-  }
-  void loadData() {
-    WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
-    futureExerciseCatalogList = manager.exerciseCatalogList; //no await
   }
 
   void searchExerciseByText(String value){
@@ -82,6 +74,9 @@ class _CatalogPageState extends State<CatalogPage>{
 
   @override
   Widget build(BuildContext context) {
+    WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
+    context.watch<WorkoutDataManager>();
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -104,7 +99,7 @@ class _CatalogPageState extends State<CatalogPage>{
         ),
       ),
       body: FutureBuilder(
-        future: futureExerciseCatalogList,
+        future: manager.exerciseCatalogList,
         builder: (context, snapshot){
           // Error case
           if (snapshot.hasError) {

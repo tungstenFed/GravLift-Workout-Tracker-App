@@ -8,12 +8,12 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 var imgPicker = ImagePicker();
 var placeHolderIcon = Icon(Icons.person, color: Colors.white);
 
-Future<String?> handleImageUpload() async {
+Future<List<String?>> handleImageUpload() async {
 
   try{
     //Set image file as a variable, compress and upload to supabase
     XFile? fileChosen = await imgPicker.pickImage(source: ImageSource.gallery);
-    if(fileChosen == null){print("[DEBUG] no img selected");return null;}
+    if(fileChosen == null){print("[DEBUG] no img selected");return [];}
 
     //Allowed extensions: jpeg jpg png webp (All will turn in webP's)
     String fileExtension = fileChosen.path.split('.').last.toLowerCase().trim();
@@ -22,24 +22,25 @@ Future<String?> handleImageUpload() async {
     List<String> allowedExtensions = ["jpg", "jpeg", "png", "webp"];
     if(allowedExtensions.contains(fileExtension) == false){
       print("[DEBUG] FILE TYPE NOT SUPPORTED");
-      return null;
+      return [];
     }
 
     File? compressedImage = await compressFileForPfp(fileChosen);
-    if(compressedImage == null){print("[DEBUG] ERROR IN COMPRESSION"); return null;}
+    if(compressedImage == null){print("[DEBUG] ERROR IN COMPRESSION"); return [];}
 
     String? pfpUrl = await uploadToSupabase(compressedImage);
-    return pfpUrl;
+    String? pfpPath = fileChosen.path;
+    return [pfpUrl, pfpPath];
 
   }catch (e){
     print(e);
     if(e is UnsupportedError)
-      {return e.message;}
+      {return [e.message];}
     else if(e is CompressError){
-      return e.message;
+      return [e.message];
     }
   }
-  return null;
+  return [];
 }
 
 Future<File?> compressFileForPfp (XFile file) async{

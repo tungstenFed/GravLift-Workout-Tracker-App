@@ -31,7 +31,7 @@ void main() async {
   await Supabase.initialize(url: url, anonKey: key,
     authOptions: const FlutterAuthClientOptions(
       authFlowType: AuthFlowType.pkce, //token in SharedPreferences
-    ),);
+  ),);
 
 
   //Create a provider object to connect the UI to the changeNotifier class we created

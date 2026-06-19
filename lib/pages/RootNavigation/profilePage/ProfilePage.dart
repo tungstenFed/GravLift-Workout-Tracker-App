@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,6 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<ProfileInfo>? profileInfoFuture;
   Future<int>? numberWorkoutSessions;
   Future<List<WorkoutSession>?>? history;
+  String sharedPrefPfpPath = "";
 
   @override
   void initState() {
@@ -32,7 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
     loadData();
   }
 
-  void loadData() {
+  Future<void> loadData() async {
     WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
 
     //we want multiple future variables but future builder has 1 parameter, so we're gonna create a list of futures using 'Future.wait()'
@@ -46,6 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
         history = manager.history, //INDEX for snapshot.data = 2
       ]
     );
+    sharedPrefPfpPath = await manager.loadPfpFromSharedPref();
   }
 
   @override
@@ -139,9 +143,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     CircleAvatar(
                       radius: 45,
                       backgroundColor: Colors.black,
-                      foregroundImage: (profileInfo.pfp_url == "" || profileInfo.pfp_url == null)
-                          ? AssetImage("assets/images/avatar.jpg")
-                          : NetworkImage('${profileInfo.pfp_url}?t=${DateTime.now().millisecondsSinceEpoch}'),
+                      foregroundImage:
+                          manager.internetConnection == true
+                            ? (profileInfo.pfp_url == "")
+                                ? AssetImage("assets/images/avatar.jpg")
+                                : NetworkImage('${profileInfo.pfp_url}?t=${DateTime.now().millisecondsSinceEpoch}')
+                            : (sharedPrefPfpPath.isNotEmpty)
+                              ? FileImage(File(sharedPrefPfpPath))
+                              : AssetImage("assets/images/avatar.jpg"),
+
                     ),
                     SizedBox(width: 20),
                     Expanded(child: Column( //Expanded prevents overflowing on the right
@@ -160,7 +170,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             Icon(Icons.fitness_center, size: 20, color: Colors.deepPurpleAccent),
                             SizedBox(width: 8),
-                            gravLiftText(text: "$numberWorkoutSessions Workouts", size: 17),
+                            gravLiftText(text:
+                              manager.internetConnection
+                                ?"$numberWorkoutSessions Workouts"
+                                : "Connection Error",
+                                size: 17),
                           ],
                         ),
                         SizedBox(height: 15),
@@ -203,32 +217,38 @@ class _ProfilePageState extends State<ProfilePage> {
               numberWorkoutSessions == 0
               ? Column(
                     children: [
-                      Text("No workout sessions yet!", style: TextStyle(color: Colors.white70)),
+                      Text(
+                          manager.internetConnection==true
+                            ?"No workout sessions yet!"
+                            :"Internet connection necessary to load workout sessions.",
+                          style: TextStyle(color: Colors.white70)),
                       SizedBox(height: 20,),
-                      // Empty workout button
-                      ListTile(
-                        leading: Icon(Icons.add_circle_outline_outlined, color: Colors.deepPurpleAccent, size: 25,),
-                        title: gravLiftText(text: "Start Empty Workout", size: 17, color: Colors.deepPurpleAccent),
-                        trailing: Icon(Icons.keyboard_arrow_right_outlined, color: Colors.deepPurpleAccent, size: 35,),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
-                            side: BorderSide(color: Colors.deepPurpleAccent, width: 0.8)
-                        ),
-                        tileColor: Colors.grey.withValues(alpha: 0.1), //same as withOpacity
-                        onTap: ()  {
-                          if(manager.workoutSession == null) { // when pressing this if session is active, dialog box and if yes scrap current ws and start another one
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => OngoingWorkoutPage()
-                                )
-                            );
-                          }
-                          else {
-                            gravLiftReplaceWorkoutSession(context);
-                          }
-                        },
-                      )
+                      // Empty workout button only if internet connection
+                      manager.internetConnection==true
+                      ? ListTile(
+                          leading: Icon(Icons.add_circle_outline_outlined, color: Colors.deepPurpleAccent, size: 25,),
+                          title: gravLiftText(text: "Start Empty Workout", size: 17, color: Colors.deepPurpleAccent),
+                          trailing: Icon(Icons.keyboard_arrow_right_outlined, color: Colors.deepPurpleAccent, size: 35,),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
+                              side: BorderSide(color: Colors.deepPurpleAccent, width: 0.8)
+                          ),
+                          tileColor: Colors.grey.withValues(alpha: 0.1), //same as withOpacity
+                          onTap: ()  {
+                            if(manager.workoutSession == null) { // when pressing this if session is active, dialog box and if yes scrap current ws and start another one
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => OngoingWorkoutPage()
+                                  )
+                              );
+                            }
+                            else {
+                              gravLiftReplaceWorkoutSession(context);
+                            }
+                          },
+                        )
+                      : SizedBox(),
                     ]
                  )
               //ELSE, show the past ws
