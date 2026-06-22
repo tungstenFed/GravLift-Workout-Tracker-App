@@ -244,7 +244,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               );
                             }
                             else {
-                              gravLiftReplaceWorkoutSession(context);
+                              gravLiftReplaceWorkoutSession(context, false);
                             }
                           },
                         )

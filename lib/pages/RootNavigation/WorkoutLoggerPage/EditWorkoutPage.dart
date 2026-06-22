@@ -80,7 +80,7 @@ class EditWorkoutPageState extends State<EditWorkoutPage> {
                 color: Colors.red,
               ),
               onPressed: () {
-                gravLiftDiscardEditsDialog(context);
+                gravLiftDiscardEditsOrRoutineDialog(context, false);
               },
             ),
           ],
@@ -235,8 +235,8 @@ class EditWorkoutPageState extends State<EditWorkoutPage> {
                                               id: UuidGenerator.generate(),
                                               workout_exercise_id: exercise.id,
                                               user_id: user_id,
-                                              type: "",
-                                              rpe: 0,
+                                              type: "normal",
+                                              rpe: 1,
                                               weightController: TextEditingController(),
                                               repsController: TextEditingController(),
                                             );
@@ -285,11 +285,11 @@ class EditWorkoutPageState extends State<EditWorkoutPage> {
                               id: UuidGenerator.generate(),
                               workout_exercise_id: id,
                               user_id: user_id,
-                              weight: null,
-                              reps: null,
-                              seconds: null,
-                              type: "",
-                              rpe: 0,
+                              weight: 0,
+                              reps: 0,
+                              seconds: 0,
+                              type: "normal",
+                              rpe: 1,
                               weightController: TextEditingController(), //Create first set's controllers
                               repsController: TextEditingController(),
                             )

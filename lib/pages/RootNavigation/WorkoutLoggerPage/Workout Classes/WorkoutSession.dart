@@ -8,8 +8,9 @@ class WorkoutSession //from Map to Obj
   DateTime? created_time;
   String name;
   List<WorkoutExercise> exercisesList = [];
+  bool isRoutine;
 
-  WorkoutSession({required this.id,  required this.name,  required this.exercisesList,  this.start_time,  this.end_time, this.created_time});
+  WorkoutSession({required this.id,  required this.name,  required this.exercisesList,  this.start_time,  this.end_time, this.created_time, required this.isRoutine});
 
   //from OBJ to MAP which will be later encoded in JSON (for SP)
   Map<String,dynamic> toJson() {
@@ -21,6 +22,7 @@ class WorkoutSession //from Map to Obj
       "name":name,
       //Every element in list has to be a Json
       "exercisesList": exercisesList.map((e) => e.toJson()) .toList(),
+      "isRoutine": isRoutine,
     };
   }
 
@@ -34,6 +36,7 @@ class WorkoutSession //from Map to Obj
       end_time: DateTime.tryParse(jsonMap["end_time"]),
       //Every element in list is json and it's converted in obj
       exercisesList: (jsonMap["exercisesList"] as List).map((e) => WorkoutExercise.fromJsonMap(e)) .toList(),
+      isRoutine: jsonMap["isRoutine"],
     );
   }
 
@@ -41,10 +44,11 @@ class WorkoutSession //from Map to Obj
     return WorkoutSession(
       id: map["id"],
       name: map["name"],
-      start_time: DateTime.tryParse(map["start_time"]),
+      start_time: DateTime.tryParse(map["start_time"] ),
       created_time: DateTime.tryParse(map["created_time"]),
-      end_time: DateTime.tryParse(map["end_time"]),
-      exercisesList: [] //Filled while building each object
+      end_time: DateTime.tryParse(map["end_time"] ?? "") ?? DateTime.now(), //"??Datetime.now()" is just here to act as a null, the only case in when having a isRoutine = true workoutSession but its not a problem since start Time with routines is never displayed
+      exercisesList: [], //Filled while building each object
+      isRoutine: map["isRoutine"],
     );
   }
 
@@ -60,6 +64,7 @@ class WorkoutSession //from Map to Obj
       NAME:       $name
       START:      $start_time
       END:        $end_time
+      IS ROUTINE: $isRoutine 
       ------------------------------------------------------------
       EXERCISES LIST:
       ------------------------------------------------------------

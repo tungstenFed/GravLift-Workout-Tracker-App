@@ -71,6 +71,7 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
         id: UuidGenerator.generate(),
         name: "",
         exercisesList: [],
+        isRoutine: false
       );
       //Just says to flutter to call this once everything is loaded and built
         Provider.of<WorkoutDataManager>(context, listen: false).addSession(session);
@@ -283,8 +284,11 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
                                                   id: UuidGenerator.generate(),
                                                   workout_exercise_id: exercise.id,
                                                   user_id: user_id,
-                                                  type: "",
-                                                  rpe: 0,
+                                                  type: "normal",
+                                                  rpe: 1,
+                                                  weight: 0,
+                                                  reps: 0,
+                                                  seconds: 0,
                                                   weightController: TextEditingController(),
                                                   repsController: TextEditingController(),
                                                 );
@@ -334,11 +338,11 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
                               id: UuidGenerator.generate(),
                               workout_exercise_id: id,
                               user_id: user_id,
-                              weight: null,
-                              reps: null,
-                              seconds: null,
-                              type: "",
-                              rpe: 0,
+                              weight: 0,
+                              reps: 0,
+                              seconds: 0,
+                              type: "normal",
+                              rpe: 1,
                               weightController: TextEditingController(), //Create first set's controllers
                               repsController: TextEditingController(),
                             )
@@ -457,7 +461,7 @@ Widget tableInputBuilder(String hint, WorkoutExercise exercise, String uniqueKey
           child: hint.toLowerCase() == "type"
           ? DropdownButton(
             key: ValueKey(uniqueKey),
-            value: currentType == "" ? null : currentType,
+            value: set.type,
             isExpanded: true,
             hint: Text("Select", style: TextStyle(color: Colors.grey[400], fontSize: 14),),
             style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
@@ -483,7 +487,7 @@ Widget tableInputBuilder(String hint, WorkoutExercise exercise, String uniqueKey
           : DropdownButton(
               key: ValueKey(uniqueKey),
               isExpanded: true,
-              value: currentRpe == 0 ? null : currentRpe,
+              value: currentRpe,
               hint: Text("Select", style: TextStyle(color: Colors.grey[400], fontSize: 14)),
               style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
 

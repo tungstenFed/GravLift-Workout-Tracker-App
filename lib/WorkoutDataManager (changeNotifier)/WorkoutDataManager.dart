@@ -31,15 +31,18 @@ class WorkoutDataManager extends ChangeNotifier{
   String sharedPrefProfileInfo = "profile_info";
   String sharedPrefExCatalog = "exercise_catalog";
   String sharedPrefPfpPath = "pfp_path"; //Load pfp offline
+  String sharedPrefRoutines = "offline_routines";
 
   //Null to initialize it here, and future to put await in the pages where it's fetched, less code to edit
   //Gotta be future also to use them in futureBuilders
-   Future<ProfileInfo> profileInfo = Future.any([]); //Empty
-   Future<List<ExerciseCatalog>>? exerciseCatalogList = fetchExerciseCatalogInfo();
-   Future<int> numWorkoutSession = Future.value(0);
-   Future<List<WorkoutSession>?>  history = Future.value([]);
 
-   bool internetConnection = false;
+  Future<ProfileInfo> profileInfo = Future.value(ProfileInfo(user_id: "", username: "Atleta", email: "", age: 0, kg_or_lbs: "kg", cm_or_inches: "cm", km_or_miles: "km", male_female: "", weight: 0, height: 0));
+  Future<List<ExerciseCatalog>>? exerciseCatalogList = fetchExerciseCatalogInfo();
+  Future<int> numWorkoutSession = Future.value(0);
+  Future<List<WorkoutSession>?>  history = Future.value([]);
+  Future<List<WorkoutSession>?> routines = Future.value([]);
+
+  bool internetConnection = false;
 
 
   void initData() async {
@@ -49,24 +52,27 @@ class WorkoutDataManager extends ChangeNotifier{
     //---
 
     if(internetConnection==false){
-      //OFFLINE
-      loadProfileInfoFromSharedPref();
-      loadExCatalogToSharedPref();
-      loadPfpFromSharedPref();
+      //--OFFLINE--
+      await loadProfileInfoFromSharedPref();
+      await loadExCatalogFromSharedPref();
+      await loadPfpFromSharedPref();
 
       //These 2 are none offline
       history = Future.value([]);
       numWorkoutSession = Future.value(0);
+      routines = Future.value([]);
     } else {
-      //ONLINE
+      //--ONLINE--
       profileInfo = fetchProfileInfo();
       exerciseCatalogList = fetchExerciseCatalogInfo();
 
-      saveProfileInfoToSharedPref(await profileInfo);
-      saveExCatalogToSharedPref();
+      //Called when they're done loading from online
+      profileInfo.then((data) => saveProfileInfoToSharedPref(data));
+      exerciseCatalogList?.then((data) => saveExCatalogToSharedPref());
 
       numWorkoutSession = fetchNumberWorkoutSessions();
       history = fetchWorkoutSessions();
+      routines = fetchRoutines();
     }
     notifyListeners();
   }
@@ -112,14 +118,16 @@ class WorkoutDataManager extends ChangeNotifier{
 
   Future<void> insertWorkoutDataInDb(WorkoutSession session) async {
 
+    try{
       //Insert session
       await supabaseClient.from("workout_sessions").insert({
         "user_id": user_id,
         "name": session.name,
         "id": session.id,
-        "start_time": session.start_time!.toIso8601String(),
-        "end_time": session.end_time!.toIso8601String(),
-        "created_time": session.created_time!.toIso8601String()
+        "start_time": session.start_time?.toIso8601String(),
+        "end_time": session.end_time?.toIso8601String(),
+        "created_time": session.created_time?.toIso8601String(),
+        "isRoutine": session.isRoutine,
       });
 
       //Insert every exercise of this session
@@ -142,10 +150,10 @@ class WorkoutDataManager extends ChangeNotifier{
             "id": set.id,
             "workout_exercise_id": exercise.id,
             "user_id": user_id,
-            "weight": set.weight,
-            "reps": set.reps,
+            "weight": set.weight ?? 0.0,
+            "reps": set.reps ?? 0,
             "type": set.type,
-            "seconds": set.seconds,
+            "seconds": set.seconds ?? 0,
             "rpe": set.rpe,
           });
         }
@@ -156,6 +164,10 @@ class WorkoutDataManager extends ChangeNotifier{
         }
       }
       notifyListeners();
+    } catch (e){
+      rethrow;
+    }
+
   }
   Future<void> editWorkoutDataInDB(WorkoutSession newSession, WorkoutSession oldSession) async {
 
@@ -176,13 +188,15 @@ class WorkoutDataManager extends ChangeNotifier{
         "start_time": oldStartTime?.toIso8601String(),
         "end_time": oldEndTime?.toIso8601String(),
         "created_time": oldCreatedTime?.toIso8601String(),
+        "isRoutine": false,
       });
 
       //remove all old exercises and sets
       await supabaseClient.from("workout_exercises")
           .delete()
           .eq("user_id", user_id)
-          .eq("workout_id", id);
+          .eq("workout_id", id)
+          .eq("isRoutine", false);
 
       //Insert every exercise of this session
       int order = 0;
@@ -257,13 +271,13 @@ class WorkoutDataManager extends ChangeNotifier{
 
   //---ACTIVE WS SHARED PREFERENCES---
 
-      //To save everything is SP we're gonna user this class. First encode in json and save to SP, then on app open decode and assign here.
-      //Also a method to clear the SP once everything is saved in db
-      //Save to sPrefs
+  //To save everything is SP we're gonna user this class. First encode in json and save to SP, then on app open decode and assign here.
+  //Also a method to clear the SP once everything is saved in db
+  //Save to sPrefs
   Future<void> saveToSharedPreferences() async {
 
     if(workoutSession != null){ //if there's an active WS
-      
+
       SharedPreferences sPrefs = await SharedPreferences.getInstance(); //Get prefs' instance so we can access it
 
       String jsonString = jsonEncode(workoutSession?.toJson()); //Create a JSON string to give sPrefs
@@ -328,7 +342,7 @@ class WorkoutDataManager extends ChangeNotifier{
       notifyListeners();
     }
   }
-  Future<void> loadExCatalogToSharedPref() async {
+  Future<void> loadExCatalogFromSharedPref() async {
     SharedPreferences sPrefs = await SharedPreferences.getInstance();
     String? jsonString = sPrefs.getString(sharedPrefExCatalog);
 
@@ -385,12 +399,14 @@ class WorkoutDataManager extends ChangeNotifier{
       print("[DEBUG] SUCCESSFULLY SAVED TO S-PREFS (OFFLINE-ws)");
       notifyListeners();
     } catch (e,stack){
-      print(e);
+      print("$e,$stack");
     }
   }
   Future<void> load_InsertOfflineWSFromSharedPref() async {
+    if (!internetConnection) return;
     SharedPreferences sPrefs = await SharedPreferences.getInstance();
     String? jsonString = sPrefs.getString(sharedPrefOfflineWS);
+
     try{
 
       if(jsonString != null) {
@@ -408,18 +424,54 @@ class WorkoutDataManager extends ChangeNotifier{
               "id": session.id,
               "start_time": session.start_time!.toIso8601String(),
               "end_time": session.end_time!.toIso8601String(),
-              "created_time": session.created_time!.toIso8601String()
-            }).eq("user_id", user_id);
+              "created_time": session.created_time!.toIso8601String(),
+              "isRoutine": false,
+            });
+
+            //Insert every exercise of this session
+            int order = 0;
+            for(WorkoutExercise exercise in session.exercisesList) {
+              await supabaseClient.from("workout_exercises").insert({
+                "order": order,
+                "id": exercise.id,
+                "workout_id": exercise.workout_id,
+                "exercise_id": exercise.exercise_id,
+                "user_id": user_id,
+              });
+              order++;
+
+              //Insert every set in this exercise's setList
+              List<Map<String, dynamic>> setsToInsert = [];
+
+              for (ExerciseSet set in exercise.setList) {
+                setsToInsert.add({
+                  "id": set.id,
+                  "workout_exercise_id": exercise.id,
+                  "user_id": user_id,
+                  "weight": set.weight,
+                  "reps": set.reps,
+                  "type": set.type,
+                  "seconds": set.seconds,
+                  "rpe": set.rpe,
+                });
+              }
+
+              // bulk insert!
+              if (setsToInsert.isNotEmpty) {
+                await supabaseClient.from("exercise_sets").insert(setsToInsert);
+              }
+            }
 
             print("Loaded offline session to supabase.");
           }
 
+          await sPrefs.remove(sharedPrefOfflineWS);
         }
       }
-      } catch (e,stack){
+    } catch (e,stack){
       print("************\*************$e,$stack*****************\************");
-      }
     }
+  }
 
   //---OFFLINE CUSTOM EXERCISES (PENDING) SHARED-PREFERENCES
   Future<void> saveCustomExToSharedPref(ExerciseCatalog customExercise) async {
@@ -441,6 +493,7 @@ class WorkoutDataManager extends ChangeNotifier{
     notifyListeners();
   }
   Future<void> load_InsertOfflineCustomExFromSharedPref() async {
+    if (!internetConnection) return;
     SharedPreferences sPrefs = await SharedPreferences.getInstance();
     String? jsonString = sPrefs.getString(sharedPrefOfflineCE);
 
@@ -464,10 +517,10 @@ class WorkoutDataManager extends ChangeNotifier{
               "isIsometric": cEx.isIsometric,
               "exercise_image_filename" : cEx.exercise_image_filename,
               "yt_link": cEx.yt_link
-            }).eq("user_id", user_id);
+            });
             print("Loaded offline Custom exercise to supabase.");
           }
-          sPrefs.clear();
+          await sPrefs.remove(sharedPrefOfflineCE);
         }
       } catch (e){
         print(e);
@@ -475,48 +528,155 @@ class WorkoutDataManager extends ChangeNotifier{
     }
   }
 
+  //---OFFLINE WORKOUT ROUTINES (PENDING) SHARED-PREFERENCES
+  Future<void> saveOfflineRoutineToSharedPref() async {
+    try{
+      //Add batch of pending ws's that'll be added to supabase when internet is back on.
+      SharedPreferences sPrefs = await SharedPreferences.getInstance();
+
+      //Fetch the other offline ws already in SP, then add the current one.
+      List<WorkoutSession> offlineRoutines = []; //needs to be dynamic in other for jsonDecode to work and add.
+      String? jsonString = sPrefs.getString(sharedPrefRoutines);
+
+      if(jsonString != null){
+        //Get the past list and convert all in workoutSession objects. jsonDecode returns a List<dynamic>
+        List<dynamic> pastRoutines = jsonDecode(jsonString);
+        offlineRoutines = pastRoutines.map((routine) => WorkoutSession.fromJsonMap(routine)).toList();
+      }
+      offlineRoutines.add(workoutSession!); //Works cause a routine is treated like a workoutSession, only thing it gets erased when going back always
+
+      //Saved in a list of workout sessions, when loading from this SP keep in mind its a list
+      List<Map<String, dynamic>> jsonOfflineRoutines = offlineRoutines.map((session) => session.toJson()).toList();
+      jsonString = jsonEncode(jsonOfflineRoutines);
+      await sPrefs.setString(sharedPrefRoutines, jsonString);
+
+      print("[DEBUG] SUCCESSFULLY SAVED TO S-PREFS (OFFLINE-ROUTINES)");
+      notifyListeners();
+    } catch (e,stack){
+      print("$e,$stack");
+    }
+  }
+  Future<void> load_InsertOfflineRoutinesFromSharedPref() async {
+
+    if (!internetConnection) return;
+    SharedPreferences sPrefs = await SharedPreferences.getInstance();
+    String? jsonString = sPrefs.getString(sharedPrefRoutines);
+    try{
+      if(jsonString != null) {
+        List<dynamic> jsonOfflineRoutines = jsonDecode(jsonString);
+        List<WorkoutSession> offlineRoutine = jsonOfflineRoutines.map((rout) => WorkoutSession.fromJsonMap(rout)).toList();
+        if (internetConnection) {
+          //Insert every session in supabase
+          for (WorkoutSession routine in offlineRoutine) {
+
+            await supabaseClient.from("workout_sessions").insert({
+              "user_id": user_id,
+              "name": routine.name,
+              "id": routine.id,
+              "start_time": routine.start_time!.toIso8601String(),
+              "end_time": routine.end_time!.toIso8601String(),
+              "created_time": routine.created_time!.toIso8601String(),
+              "isRoutine": true,
+            });
+
+            //Insert every exercise of this session
+            int order = 0;
+            for(WorkoutExercise exercise in routine.exercisesList) {
+              await supabaseClient.from("workout_exercises").insert({
+                "order": order,
+                "id": exercise.id,
+                "workout_id": exercise.workout_id,
+                "exercise_id": exercise.exercise_id,
+                "user_id": user_id,
+              });
+              order++;
+
+              //Insert every set in this exercise's setList
+              List<Map<String, dynamic>> setsToInsert = [];
+
+              for (ExerciseSet set in exercise.setList) {
+                setsToInsert.add({
+                  "id": set.id,
+                  "workout_exercise_id": exercise.id,
+                  "user_id": user_id,
+                  "weight": set.weight,
+                  "reps": set.reps,
+                  "type": set.type,
+                  "seconds": set.seconds,
+                  "rpe": set.rpe,
+                });
+              }
+
+              // bulk insert!
+              if (setsToInsert.isNotEmpty) {
+                await supabaseClient.from("exercise_sets").insert(setsToInsert);
+              }
+
+              print("Loaded offline routine to supabase.");
+            }
+          }
+          await sPrefs.remove(sharedPrefRoutines); //
+        }
+      }
+    } catch (e,stack){
+      print("$e,$stack");
+    }
+  }
+
   //Needed to re-fetch history and n of workout sessions so when adding or deleting a workout session, the page is updated
   Future<void> reFetchHistory() async{
-      if(internetConnection){
-        history = fetchWorkoutSessions();
-        numWorkoutSession = fetchNumberWorkoutSessions();
-        print("Successfully re-fetched history");
-      } else {
-        history = Future.value([]);
-        numWorkoutSession = Future.value(0);
-        print("Didn't re-fetch history, no internet.");
-        }
-      notifyListeners(); //Update who's watching the data manager (root, history)
+    if(internetConnection){
+      history = fetchWorkoutSessions();
+      numWorkoutSession = fetchNumberWorkoutSessions();
+      print("Successfully re-fetched history");
+    } else {
+      history = Future.value([]);
+      numWorkoutSession = Future.value(0);
+      print("Didn't re-fetch history, no internet.");
+    }
+    notifyListeners(); //Update who's watching the data manager (root, history)
+  }
+  Future<void> reFetchRoutines() async{
+    if(internetConnection){
+      routines = fetchRoutines();
+      print("Successfully re-fetched routine");
+    } else {
+      routines = Future.value([]);
+      print("Didn't re-fetch routines, no internet.");
+    }
+    notifyListeners();
   }
   Future<void> reFetchExerciseCatalogList() async {
-      if(internetConnection) {
-        //Function used to refetch what's in the manager which is fetched only once on app's opening, after creating a Custom ex.
-        exerciseCatalogList = fetchExerciseCatalogInfo(); //The real change is in this function, added the c.ex table!
-        notifyListeners();
-        print("Successfully refetched catalog");
+    if(internetConnection) {
+      //Function used to refetch what's in the manager which is fetched only once on app's opening, after creating a Custom ex.
+      exerciseCatalogList = fetchExerciseCatalogInfo(); //The real change is in this function, added the c.ex table!
+      notifyListeners();
+      print("Successfully refetched catalog");
 
-      } else {
-        loadExCatalogToSharedPref();
-        print("Didn't CEX re-fetched Catalog, got from Sp");
-      }
+    } else {
+      await loadExCatalogFromSharedPref();
+      print("Didn't CEX re-fetched Catalog, got from Sp");
+    }
+    notifyListeners();
   }
   Future<void> reFetchProfileInfo() async {
-      if(internetConnection){
-        profileInfo = fetchProfileInfo();
-        notifyListeners();
-        print("Successfully re-fetched profileInfo");
-      } else {
-        loadProfileInfoFromSharedPref();
-        print("Didn't re-fetch profileInfo, got from SP");
-      }
+    if(internetConnection){
+      profileInfo = fetchProfileInfo();
+      notifyListeners();
+      print("Successfully re-fetched profileInfo");
+    } else {
+      await loadProfileInfoFromSharedPref();
+      print("Didn't re-fetch profileInfo, got from SP");
     }
+    notifyListeners();
+  }
 
 
   Future<void> openExternalLink(String stringUrl) async {
     Uri url = Uri.parse(stringUrl);
     if(await canLaunchUrl(url)){
       await launchUrl(url,
-        mode: LaunchMode.externalApplication
+          mode: LaunchMode.externalApplication
       );
     } else {
       print("Error opening $stringUrl");
@@ -527,24 +687,31 @@ class WorkoutDataManager extends ChangeNotifier{
   void initConnectionListener(){
     //Add a connectivity_plus package listener to check changes in internet connection
     Connectivity() //Create instance
-      .onConnectivityChanged //Use the package's Stream (Flux of data)
-      .listen((List<ConnectivityResult> result){
-          //now .listen() is a Stream's function that lets you listen to every change made by that stream ( Constant flux of data)
-            //In this case flutter listens to every change in th\e connection. And when there's a change it RUNS this code.
-            //Uses a List<ConnectivityResult> to get access to the result
-        if(result.isNotEmpty && result.contains(ConnectivityResult.none)){
-          internetConnection = false;notifyListeners();
-        }else{
-          internetConnection = true;
-          //When coming from started app with no internet, and internet comes up refetch from db
-          saveExCatalogToSharedPref();
-          reFetchHistory();
-          reFetchExerciseCatalogList(); //So loads it when internet comes back on
-          load_InsertOfflineCustomExFromSharedPref(); //Whenever internet's on, load the pending cEx
-          load_InsertOfflineWSFromSharedPref(); //same as line above, ws
+        .onConnectivityChanged //Use the package's Stream (Flux of data)
+        .listen((List<ConnectivityResult> result) async {
+      //now .listen() is a Stream's function that lets you listen to every change made by that stream ( Constant flux of data)
+      //In this case flutter listens to every change in th\e connection. And when there's a change it RUNS this code.
+      //Uses a List<ConnectivityResult> to get access to the result
+      if(result.isNotEmpty && result.contains(ConnectivityResult.none)){
+        internetConnection = false;notifyListeners();
+        //When internet goes down...
+        await loadProfileInfoFromSharedPref();
+        await loadFromSharedPreferences();
+        await loadExCatalogFromSharedPref();
 
-          notifyListeners();
-        }
+      }else{
+        internetConnection = true;
+        //When coming from started app with no internet, and internet comes up refetch from db
+        saveExCatalogToSharedPref();
+        reFetchHistory();
+        reFetchRoutines();
+        reFetchExerciseCatalogList(); //So loads it when internet comes back on
+        load_InsertOfflineCustomExFromSharedPref(); //Whenever internet's on, load the pending cEx
+        load_InsertOfflineWSFromSharedPref(); //same as line above, ws
+        load_InsertOfflineRoutinesFromSharedPref();
+
+        notifyListeners();
+      }
 
     });
   }
