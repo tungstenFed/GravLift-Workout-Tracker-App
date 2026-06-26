@@ -62,9 +62,10 @@ class EditWorkoutPageState extends State<EditWorkoutPage> {
   @override
   Widget build(BuildContext context) {
     //No need for manager, i've already got my session
-
+    WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
     WorkoutSession oldSession = widget.pastSession; //Doesn't get modified
     WorkoutSession newSession = widget.pastSession; //Gets modified -> becomes new
+
     BuildContext historyInfoPageContext = widget.historyInfoPageContext; //get the historyInfoPage's context so i can close it once everything is edited
 
     return Scaffold(
@@ -93,8 +94,7 @@ class EditWorkoutPageState extends State<EditWorkoutPage> {
               width: 80,
               child: gravLiftFabExt(
                   onPressed: () {
-                    gravLiftConfirmEditSessionDialog(context, oldSession: oldSession, newSession: newSession, historyInfoPageContext: historyInfoPageContext);
-
+                    gravLiftConfirmEditSessionDialog(context, oldSession: oldSession, newSession: newSession, historyInfoPageContext: historyInfoPageContext, isRoutine: newSession.isRoutine);
                   },
                   label: "Finish",
                   fontSize: 16

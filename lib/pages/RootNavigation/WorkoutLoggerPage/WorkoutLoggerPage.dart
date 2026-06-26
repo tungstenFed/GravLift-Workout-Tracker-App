@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gravlift_workout_tracker_app/WorkoutDataManager%20(changeNotifier)/WorkoutDataManager.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerPage/CreateRoutinePage.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerPage/EditWorkoutPage.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerPage/OngoingWSDialogs.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerPage/Workout%20Classes/WorkoutSession.dart';
 import 'package:gravlift_workout_tracker_app/pages/templates/widgetsTemplates.dart';
@@ -139,7 +140,7 @@ class _WorkoutLoggerPageState extends State<WorkoutLoggerPage> {
                               radius: 24,
                               backgroundColor: Colors.deepPurpleAccent.withValues(alpha: 0.1),
                               child: const Icon(
-                                Icons.fitness_center_rounded,
+                                Icons.inventory_rounded,
                                 color: Colors.deepPurpleAccent,
                                 size: 22,
                               ),
@@ -147,7 +148,7 @@ class _WorkoutLoggerPageState extends State<WorkoutLoggerPage> {
                             title: Text(
                               routine.name,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -176,8 +177,23 @@ class _WorkoutLoggerPageState extends State<WorkoutLoggerPage> {
                                 Icon(Icons.keyboard_arrow_right_rounded, color: Colors.grey[600], size: 20),
                               ],
                             ),
-                            onTap: () {//TODO
+                            onLongPress: (){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => EditWorkoutPage(pastSession: routine, historyInfoPageContext: context))
+                              );
                             },
+                            onTap: () {
+                              if(manager.workoutSession != null){
+                                gravLiftReplaceWorkoutSession(context, false, openingRoutine: true, routineSession: routine);
+                              } else {
+                                manager.workoutSession = routine;
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => OngoingWorkoutPage())
+                                );
+                              }
+                            }
                           );
                         }
                         return const SizedBox();

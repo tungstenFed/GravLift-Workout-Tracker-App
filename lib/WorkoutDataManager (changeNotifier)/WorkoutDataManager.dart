@@ -169,7 +169,7 @@ class WorkoutDataManager extends ChangeNotifier{
     }
 
   }
-  Future<void> editWorkoutDataInDB(WorkoutSession newSession, WorkoutSession oldSession) async {
+  Future<void> editWorkoutDataInDB(WorkoutSession newSession, WorkoutSession oldSession, bool isRoutine) async {
 
     try {
       String id = newSession.id; //Id's are the same
@@ -188,15 +188,14 @@ class WorkoutDataManager extends ChangeNotifier{
         "start_time": oldStartTime?.toIso8601String(),
         "end_time": oldEndTime?.toIso8601String(),
         "created_time": oldCreatedTime?.toIso8601String(),
-        "isRoutine": false,
+        "isRoutine": isRoutine,
       });
 
       //remove all old exercises and sets
       await supabaseClient.from("workout_exercises")
           .delete()
           .eq("user_id", user_id)
-          .eq("workout_id", id)
-          .eq("isRoutine", false);
+          .eq("workout_id", id);
 
       //Insert every exercise of this session
       int order = 0;

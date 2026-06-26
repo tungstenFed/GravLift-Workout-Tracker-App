@@ -128,7 +128,7 @@ void gravLiftConfirmSessionDialog(BuildContext contextPage){
     },
   );
 }
-void gravLiftReplaceWorkoutSession(BuildContext contextPage, bool isRoutine){
+void gravLiftReplaceWorkoutSession(BuildContext contextPage, bool isRoutine, {bool openingRoutine = false, WorkoutSession? routineSession = null}){
 
   showDialog(
     context: contextPage,
@@ -150,12 +150,28 @@ void gravLiftReplaceWorkoutSession(BuildContext contextPage, bool isRoutine){
               manager.timer = null;
 
               Navigator.pop(context);
-              Navigator.push(
+
+            //When clicking on either create a routine or session
+              if(!openingRoutine){
+                Navigator.push(
+                context,
+                  MaterialPageRoute(
+                    builder: (context) => isRoutine == false ? OngoingWorkoutPage() : CreateRoutinePage()
+                  )
+                );
+              } else {
+            //When starting a workout from a routine (tapping on it)
+
+                //Now add the session in the manager and open ongoing with that session loaded
+                manager.workoutSession = routineSession;
+                Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => isRoutine == false ? OngoingWorkoutPage() : CreateRoutinePage()
+                    builder: (context) => OngoingWorkoutPage()
                   )
-              );
+                );
+              }
+
             },
             child: const Text('Delete'),
           ),
@@ -204,7 +220,7 @@ void gravLiftDiscardEditsOrRoutineDialog(BuildContext contextPage, bool isRoutin
 }
 void gravLiftConfirmEditSessionDialog(
     BuildContext contextPage, {required WorkoutSession oldSession,
-  required WorkoutSession newSession, required BuildContext historyInfoPageContext}){
+  required WorkoutSession newSession, required BuildContext historyInfoPageContext, required isRoutine}){
 
   String name = "";
   String exMsg = "";
@@ -247,7 +263,7 @@ void gravLiftConfirmEditSessionDialog(
                       exMsg="";
                       try{
                         if(manager.internetConnection){
-                          await manager.editWorkoutDataInDB(newSession, oldSession); //Wait it's fully inserted in the db
+                          await manager.editWorkoutDataInDB(newSession, oldSession, isRoutine); //Wait it's fully inserted in the db
 
                           //Re-Fetch to update the profilePage's history
                           manager.reFetchHistory();
@@ -262,7 +278,7 @@ void gravLiftConfirmEditSessionDialog(
                           setStateDialog((){isSubmitLoading = false;}); //activate if went wrong and has to re-press it
                         }
                       }catch(e){
-                        await manager.deleteAllWorkoutDataForThisUser();
+                        print(e);
                         setStateDialog((){
                           exMsg = "Please check that every set's information is properly inserted.";
                         });

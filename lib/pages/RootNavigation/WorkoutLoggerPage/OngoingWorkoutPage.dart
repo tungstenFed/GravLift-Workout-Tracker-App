@@ -77,7 +77,6 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
         Provider.of<WorkoutDataManager>(context, listen: false).addSession(session);
 
     }
-
   }
 
   Future<ProfileInfo?> fetchData() async {
@@ -312,6 +311,7 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
                 itemCount: manager.workoutSession?.exercisesList.length ?? 0,
               ),
             ),
+
 
 
             //Add button //When popping, if a value is inserted in the pop as a result, it's assigned to result, ofc with an await.
