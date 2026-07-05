@@ -71,6 +71,10 @@ flutter:
     - assets/images/
     - assets/images/exercisesImages/
     - assets/images/tags_icons/
+    - assets/images/skillsImages/frontlever/
+    - assets/images/skillsImages/planche/
+    - assets/images/skillsImages/muscleup/
+    - assets/images/skillsImages/humanflag/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

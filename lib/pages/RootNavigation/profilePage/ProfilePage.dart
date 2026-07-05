@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,9 +8,14 @@ import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerP
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerPage/Workout%20Classes/WorkoutSession.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/Data%20Fetch%20Profile%20Info/ProfileInfo.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/HistoryInfoPage.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/SkillTreeDirectory/SkillTreeChooserPage.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/SkillTreeDirectory/SkillTreePage.dart';
 import 'package:gravlift_workout_tracker_app/pages/templates/widgetsTemplates.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/EditProfilePage.dart';
 import 'package:provider/provider.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/SkillTreeDirectory/SkillTreePage.dart';
+
+
 
 //temporary class to remove error detection in main.dart
 class ProfilePage extends StatefulWidget {
@@ -209,7 +213,61 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
 
-                SizedBox(height: 10),
+              //PROGRESSION TREE DASHBOARD
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SkillTreeChooserPage()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurpleAccent[600], // Sfondo grigio scuro della dashboard
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white70, // Sottile bordo per dare profondità
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Icona semplice stile Dashboard
+                          Icon(
+                            Icons.account_tree_outlined,
+                            color: Colors.grey[400],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: Text(
+                              "Calisthenics Skills \nProgression Trees",
+                              style: TextStyle(
+                                color: Colors.grey[300], // Grigio chiaro, pulito
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+
+                          // Una piccola freccia discreta sulla destra (opzionale, ma fa molto "dashboard")
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.deepPurpleAccent[600],
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
                 Center(child: gravLiftText(text: "Workout Sessions", size: 20,)),
                 Divider(color: Colors.white10),
 

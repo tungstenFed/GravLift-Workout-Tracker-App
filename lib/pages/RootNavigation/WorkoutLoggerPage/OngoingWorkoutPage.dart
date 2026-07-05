@@ -43,6 +43,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 * TODO: and is show when adding that exercise as a menu a tendina to choose the progression.
 * */
 
+//global access so every class can see and change it
+
+
 class OngoingWorkoutPage extends StatefulWidget {
   const OngoingWorkoutPage({super.key});
 
@@ -57,7 +60,7 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
   ExerciseCatalog? result;
   int exercisesOrder = 1;
   SharedPreferences? sPrefs;
-
+  bool showRestTimer = false;
 
   @override
   void initState() {
@@ -97,6 +100,7 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
 
     WorkoutDataManager manager = Provider.of<WorkoutDataManager>(context, listen: false);
 
+
     // 🛡️ FIX CRASH, null guard.
     if (manager.workoutSession == null) {
       return const Scaffold(
@@ -109,7 +113,7 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
     return Scaffold(
       appBar: AppBar(
         title: manager.timer,
-        leadingWidth: 100,
+        leadingWidth: 145,
         centerTitle: true,
         leading: Row(
           children: [
@@ -132,6 +136,38 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
                 gravLiftClosePageDialog(context);
               },
             ),
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: (){
+                showDialog(
+                  context: context,
+                  builder: (context){
+                    return AlertDialog.adaptive(
+                      title: Text("Set default rest timer,\nin seconds."),
+                      content:Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                        child: TextField(
+                          onChanged: (value){
+                            manager.defaultRestSeconds = int.parse(value);
+                            manager.saveDefaultTimerToSharedPref(int.parse(value));
+                          },
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.w500),
+                          decoration: InputDecoration(
+                            hintText: "Value",
+                            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2)),
+                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[300]!)),
+                          ),
+                        ),
+                      ),
+                      contentPadding: EdgeInsetsGeometry.all(10),
+                    );
+                  }
+                );
+              },
+            )
           ],
         ),
         actions: [
@@ -154,132 +190,137 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
       ),
 
       body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: ListView.separated(
-                itemBuilder: (context, index) {
-                  final exercise = manager.workoutSession!.exercisesList[index];
-                  return Card(
-                    //ListTile for info + table for sets
-                    child: Column(
-                      children: [
-                        ListTile(
-                          //CircleAvatar + border
-                          leading: Container(
-                            decoration: BoxDecoration(
-                              border: BoxBorder.all(color: Colors.deepPurpleAccent, width: 2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: CircleAvatar(
-                              radius: 22.5,
-                              foregroundImage: AssetImage(
-                                  "assets/images/exercisesImages/${exercise.catalog.exercise_image_filename}"),
-                            ),
-                          ),
-                          title: gravLiftText(
-                              text: exercise.catalog.exercise_name, size: 18, color: Colors.deepPurpleAccent),
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ExercisePage(exercise: exercise.catalog,)
-                                )
-                            );
-                          },
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete_forever),
-                            color: Colors.red[400],
-                            onPressed: () {
-                              setState(() {
-                                manager.removeExercise(exercise);
-                                manager.saveToSharedPreferences();
-                              });
-                            },
-                          ),
-                        ),
-                        Table(
-                          columnWidths: const {
-                            0: FlexColumnWidth(0.4), // Set
-                            1: FlexColumnWidth(1), // Weight
-                            2: FlexColumnWidth(1), // Reps
-                            3: FlexColumnWidth(1), // Type
-                            4: FlexColumnWidth(1), // RPE
-                          },
-                          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: ListView.separated(
+                    itemBuilder: (context, index) {
+                                         //  |
+                      //Null check guard 🙌☠️V
+                      if(manager.workoutSession == null){return SizedBox();}
 
-
+                      final exercise = manager.workoutSession!.exercisesList[index];
+                      return Card(
+                        //ListTile for info + table for sets
+                        child: Column(
                           children: [
-                            // LABELS ROW
-                            TableRow(children: [
-                              tableLabelBuilder("SET"),
-                              tableLabelBuilder("WEIGHT"),
-                              tableLabelBuilder("REPS/SECONDS"),
-                              tableLabelBuilder("TYPE"),
-                              tableLabelBuilder("RPE"),
-                            ]),
+                            ListTile(
+                              //CircleAvatar + border
+                              leading: Container(
+                                decoration: BoxDecoration(
+                                  border: BoxBorder.all(color: Colors.deepPurpleAccent, width: 2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: CircleAvatar(
+                                  radius: 22.5,
+                                  foregroundImage: AssetImage(
+                                      "assets/images/exercisesImages/${exercise.catalog.exercise_image_filename}"),
+                                ),
+                              ),
+                              title: gravLiftText(
+                                  text: exercise.catalog.exercise_name, size: 18, color: Colors.deepPurpleAccent),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ExercisePage(exercise: exercise.catalog,)
+                                    )
+                                );
+                              },
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete_forever),
+                                color: Colors.red[400],
+                                onPressed: () {
+                                  setState(() {
+                                    manager.removeExercise(exercise);
+                                    manager.saveToSharedPreferences();
+                                  });
+                                  setState(()=>showRestTimer=true);
+                                },
+                              ),
+                            ),
+                            Table(
+                              columnWidths: const {
+                                0: FlexColumnWidth(0.4), // Set
+                                1: FlexColumnWidth(1), // Weight
+                                2: FlexColumnWidth(1), // Reps
+                                3: FlexColumnWidth(1), // Type
+                                4: FlexColumnWidth(1), // RPE
+                              },
+                              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
 
 
-                            //A FIRST ROW IS ALWAYS PRESENT (CREATED WHEN ADDING EXERCISE DOWN BELOW)
-                            ...exercise.setList.asMap().entries.map((exSet) {
-                              /* Here go through the exercise's setList and convert it to map. This way the single set of the list becomes a
+                              children: [
+                                // LABELS ROW
+                                TableRow(children: [
+                                  tableLabelBuilder("SET"),
+                                  tableLabelBuilder("WEIGHT"),
+                                  tableLabelBuilder("REPS/SECONDS"),
+                                  tableLabelBuilder("TYPE"),
+                                  tableLabelBuilder("RPE"),
+                                ]),
+
+
+                                //A FIRST ROW IS ALWAYS PRESENT (CREATED WHEN ADDING EXERCISE DOWN BELOW)
+                                ...exercise.setList.asMap().entries.map((exSet) {
+                                  /* Here go through the exercise's setList and convert it to map. This way the single set of the list becomes a
                               MAP with KEY: the set's index in the list and with VALUE: the set object!
                               .entries is required to map this new MAP, creating a MapEntry with index and key
                               then .map() */
 
-                              int setNumberLabel = exSet.key + 1; //The set's index is the key!
-                              int setIndex = exSet.key;
-                              var set = exSet.value;
+                                  int setNumberLabel = exSet.key + 1; //The set's index is the key!
+                                  int setIndex = exSet.key;
+                                  var set = exSet.value;
 
-                              return TableRow(children: [
+                                  return TableRow(children: [
 
-                                //SET'S NUMBER LABEL AS A PopMenuButton with option to delete set
-                                PopupMenuButton(
-                                  //Set's number
-                                  icon: Text("$setNumberLabel", style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
-                                  //delete option
-                                  itemBuilder: (BuildContext contextPopMenu) => [
-                                    PopupMenuItem(
-                                      child: TextButton.icon(
-                                        icon: Icon(Icons.delete_forever, color: Colors.red, size: 30,),
-                                        label: Text("Delete set", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                        onPressed: () {
-                                          if(setNumberLabel != 1){
-                                            manager.removeSetToExercise(exercise, exercise.setList[setIndex]);
-                                            //Remove controllers
-                                            exercise.setList[setIndex].weightController?.dispose();
-                                            exercise.setList[setIndex].repsController?.dispose();
+                                    //SET'S NUMBER LABEL AS A PopMenuButton with option to delete set
+                                    PopupMenuButton(
+                                      //Set's number
+                                      icon: Text("$setNumberLabel", style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
+                                      //delete option
+                                      itemBuilder: (BuildContext contextPopMenu) => [
+                                        PopupMenuItem(
+                                          child: TextButton.icon(
+                                            icon: Icon(Icons.delete_forever, color: Colors.red, size: 30,),
+                                            label: Text("Delete set", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                            onPressed: () {
+                                              if(setNumberLabel != 1){
+                                                manager.removeSetToExercise(exercise, exercise.setList[setIndex]);
+                                                //Remove controllers
+                                                exercise.setList[setIndex].weightController?.dispose();
+                                                exercise.setList[setIndex].repsController?.dispose();
 
-                                            manager.saveToSharedPreferences();
-                                          }
-                                          Navigator.pop(contextPopMenu);
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                tableInputBuilder(profileInfo?.kg_or_lbs ?? "kg", exercise, "${exercise.id}_${setIndex}_unit", () => setState(() {}),context,setIndex),
-                                tableInputBuilder("0", exercise, "${exercise.id}_${setIndex}_reps", () => setState(() {}), context,setIndex),
-                                tableInputBuilder("Type", exercise, "${exercise.id}_${setIndex}_type", () => setState(() {}), context,setIndex),
-                                tableInputBuilder("Rpe", exercise, "${exercise.id}_${setIndex}_rpe", () => setState(() {}), context,setIndex),
-                              ]);
-                            }).toList(),
+                                                manager.saveToSharedPreferences();
+                                              }
+                                              Navigator.pop(contextPopMenu);
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    tableInputBuilder(profileInfo?.kg_or_lbs ?? "kg", exercise, "${exercise.id}_${setIndex}_unit", () => setState(() {}),context,setIndex),
+                                    tableInputBuilder("0", exercise, "${exercise.id}_${setIndex}_reps", () => setState(() {}), context,setIndex),
+                                    tableInputBuilder("Type", exercise, "${exercise.id}_${setIndex}_type", () => setState(() {}), context,setIndex),
+                                    tableInputBuilder("Rpe", exercise, "${exercise.id}_${setIndex}_rpe", () => setState(() {}), context,setIndex),
+                                  ]);
+                                }).toList(),
 
-                            // ADD SET ROW
-                            TableRow(children: [
-                              SizedBox(), // blank for weight column
-                              SizedBox(),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                                  child: SizedBox(
-                                    //To control height
-                                    height: 32.5,
-                                    child: gravLiftFabExt(
-                                        onPressed: () {
-                                          setState(() {
-                                            //Create a set
-                                              ExerciseSet set = ExerciseSet(
+                                // ADD SET ROW
+                                TableRow(children: [
+                                  SizedBox(), // blank for weight column
+                                  SizedBox(),
+                                  Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                                      child: SizedBox(
+                                        //To control height
+                                        height: 32.5,
+                                        child: gravLiftFabExt(
+                                            onPressed: () {
+                                              setState(() {
+                                                //Create a set
+                                                ExerciseSet set = ExerciseSet(
                                                   id: UuidGenerator.generate(),
                                                   workout_exercise_id: exercise.id,
                                                   user_id: user_id,
@@ -291,75 +332,83 @@ class _OngoingWorkoutPageState extends State<OngoingWorkoutPage> {
                                                   weightController: TextEditingController(),
                                                   repsController: TextEditingController(),
                                                 );
-                                              manager.addSetToExercise(exercise,set);
-                                              manager.saveToSharedPreferences();
-                                          });
-                                        },
-                                        label: "+",
-                                        fontSize: 25),
-                                  )),
-                              SizedBox(), // blank for reps column
-                              SizedBox(),
-                            ])
-                          ],
-                        )
-                      ],
-                    ),
-                  );
-                },
-                separatorBuilder: (context, index) => const Divider(color: Colors.white10,height: 1,),
-                itemCount: manager.workoutSession?.exercisesList.length ?? 0,
-              ),
-            ),
+                                                manager.addSetToExercise(exercise,set);
+                                                manager.saveToSharedPreferences();
+                                                showRestTimer=true;
 
-
-
-            //Add button //When popping, if a value is inserted in the pop as a result, it's assigned to result, ofc with an await.
-            gravLiftFabExt(
-                onPressed: () async {
-                  var result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AddExercisePage()),
-                  ) as ExerciseCatalog;
-
-                  // ignore: unnecessary_null_comparison
-                  if (result != null) {
-                    setState(() {
-                      String id = UuidGenerator.generate(); //generate here so i pass it to its first set
-                      WorkoutExercise exercise = WorkoutExercise(
-                          id: id,
-                          exercise_id: result.id,
-                          workout_id: manager.workoutSession!.id,
-                          user_id: user_id,
-                          name: result.exercise_name,
-                          order: exercisesOrder,
-                          setList: [ //Add exercise with a blank setList [FIRST ROW! INDEX 0]
-                            ExerciseSet(
-                              id: UuidGenerator.generate(),
-                              workout_exercise_id: id,
-                              user_id: user_id,
-                              weight: 0,
-                              reps: 0,
-                              seconds: 0,
-                              type: "normal",
-                              rpe: 1,
-                              weightController: TextEditingController(), //Create first set's controllers
-                              repsController: TextEditingController(),
+                                              });
+                                            },
+                                            label: "+",
+                                            fontSize: 25),
+                                      )),
+                                  SizedBox(), // blank for reps column
+                                  SizedBox(),
+                                ])
+                              ],
                             )
                           ],
-                          catalog: result
+                        ),
                       );
-                      manager.workoutSession?.exercisesList.add(exercise);
-                      manager.saveToSharedPreferences();
-                    });
-                    exercisesOrder++;
-                  }
-                },
-                label: "Add Exercise"),
-              SizedBox(height: 50),
-          ],
-        ),
-      ),
+                    },
+                    separatorBuilder: (context, index) => const Divider(color: Colors.white10,height: 1,),
+                    itemCount: manager.workoutSession?.exercisesList.length ?? 0,
+                  ),
+                ),
+
+                //Add button //When popping, if a value is inserted in the pop as a result, it's assigned to result, ofc with an await.
+                gravLiftFabExt(
+                    onPressed: () async {
+                      var result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AddExercisePage()),
+                      );
+
+                      // ignore: unnecessary_null_comparison
+                      if (result != null) {
+                        setState(() {
+                          String id = UuidGenerator.generate(); //generate here so i pass it to its first set
+                          WorkoutExercise exercise = WorkoutExercise(
+                              id: id,
+                              exercise_id: result.id,
+                              workout_id: manager.workoutSession!.id,
+                              user_id: user_id,
+                              name: result.exercise_name,
+                              order: exercisesOrder,
+                              setList: [ //Add exercise with a blank setList [FIRST ROW! INDEX 0]
+                                ExerciseSet(
+                                  id: UuidGenerator.generate(),
+                                  workout_exercise_id: id,
+                                  user_id: user_id,
+                                  weight: 0,
+                                  reps: 0,
+                                  seconds: 0,
+                                  type: "normal",
+                                  rpe: 1,
+                                  weightController: TextEditingController(), //Create first set's controllers
+                                  repsController: TextEditingController(),
+                                )
+                              ],
+                              catalog: result
+                          );
+                          setState(()=>showRestTimer=true);
+                          manager.workoutSession?.exercisesList.add(exercise);
+                          manager.saveToSharedPreferences();
+                        });
+                        exercisesOrder++;
+                      }
+                    },
+                    label: "Add Exercise"
+                ),
+                SizedBox(height: 50),
+              ],
+            ),
+          ),
+      bottomNavigationBar: showRestTimer == true
+          ? RestTimer(
+            restDuration: Duration(seconds: manager.defaultRestSeconds),
+            onTimerEnd: ()=> setState(()=> showRestTimer = false),
+          )
+          : SizedBox(),
     );
   }
 }
@@ -378,10 +427,7 @@ Widget tableLabelBuilder(String text) {
     ),
   );
 }
-
-
-Widget tableInputBuilder(String hint, WorkoutExercise exercise, String uniqueKey, VoidCallback setState,
-    BuildContext context, int setIndex) {
+Widget tableInputBuilder(String hint, WorkoutExercise exercise, String uniqueKey, VoidCallback setState, BuildContext context, int setIndex) {
 
   //Added unique keys for every input since it was giving a lot of problems without them
   //Saves set info in the CNotifier and SPreferences.
@@ -461,7 +507,7 @@ Widget tableInputBuilder(String hint, WorkoutExercise exercise, String uniqueKey
           child: hint.toLowerCase() == "type"
           ? DropdownButton(
             key: ValueKey(uniqueKey),
-            value: set.type,
+            value: currentType,
             isExpanded: true,
             hint: Text("Select", style: TextStyle(color: Colors.grey[400], fontSize: 14),),
             style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
@@ -633,6 +679,74 @@ class WorkoutTimerState extends State<WorkoutTimer> {
     elapsedTime = difference + stopwatch.elapsed; //Keeps getting rebuild with setState, stopwatch here is just to keep it going while i look at it
     String formattedTime = "${elapsedTime.inHours}:${(elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}";
     return Text(formattedTime);
+  }
+}
+
+class RestTimer extends StatefulWidget{
+  final Duration restDuration;
+  final Function() onTimerEnd;
+  const RestTimer({super.key, required this.restDuration, required this.onTimerEnd});
+
+  @override
+  State<StatefulWidget> createState() => RestTimerState();
+}
+class RestTimerState extends State<RestTimer>{
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: const BoxDecoration(
+          color: Colors.black87,
+          border: Border(
+            top: BorderSide(color: Colors.white10, width: 1),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.timer, color: Colors.deepPurpleAccent, size: 20),
+                const SizedBox(width: 10),
+                const Text(
+                  "Rest Time: ",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 19,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+
+                // ⏱️ Countdown
+                TweenAnimationBuilder<Duration>(
+                  duration: Duration(seconds: widget.restDuration.inSeconds),
+                  tween: Tween(begin: Duration(seconds: widget.restDuration.inSeconds), end: Duration.zero),
+                  onEnd: widget.onTimerEnd,
+                  builder: (context, value, child) {
+                    final m = value.inMinutes;
+                    final s = value.inSeconds % 60;
+                    return Text('$m:${s.toString().padLeft(2, '0')}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+
+            TextButton.icon(onPressed:widget.onTimerEnd, label: Icon(Icons.close,size: 26,))
+          ],
+        ),
+      ),
+    );
   }
 }
 

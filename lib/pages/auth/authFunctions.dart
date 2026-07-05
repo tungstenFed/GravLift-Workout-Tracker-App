@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:gravlift_workout_tracker_app/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-String user_id = supabaseClient.auth.currentUser!.id;
+String user_id = supabaseClient.auth.currentUser!.id; //gets filled out in functions below
+
 
 Future<String?> signUpAthlete({required String email, required String password, required BuildContext context, required WorkoutDataManager manager}) async {
   try {
@@ -60,6 +61,7 @@ Future<String?> signInAthlete(String email, String password, BuildContext contex
     if (signInResponse.user?.id == null) {
       throw AuthException("Error during signup.");
     }
+    user_id = signInResponse.user!.id;
 
     Navigator.pushAndRemoveUntil(
         context,

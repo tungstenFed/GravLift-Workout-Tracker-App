@@ -11,6 +11,9 @@ import 'package:gravlift_workout_tracker_app/pages/RootNavigation/WorkoutLoggerP
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/Data%20Fetch%20Profile%20Info/ProfileInfo.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/Data%20Fetch%20Profile%20Info/fetchProfileInfo.dart';
 import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/Data%20Fetch%20Profile%20Info/fetchWorkoutRelatedData.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/SkillTreeDirectory/SkillTreeNode.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/SkillTreeDirectory/SkillTreePage.dart';
+import 'package:gravlift_workout_tracker_app/pages/RootNavigation/profilePage/SkillTreeDirectory/SkillsFunctions.dart';
 import 'package:gravlift_workout_tracker_app/pages/auth/authFunctions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -32,17 +35,21 @@ class WorkoutDataManager extends ChangeNotifier{
   String sharedPrefExCatalog = "exercise_catalog";
   String sharedPrefPfpPath = "pfp_path"; //Load pfp offline
   String sharedPrefRoutines = "offline_routines";
+  String sharedPrefDefTimer = "default_rest_timer";
+  String sharedPrefSkillsList = "skills_list";
 
   //Null to initialize it here, and future to put await in the pages where it's fetched, less code to edit
   //Gotta be future also to use them in futureBuilders
 
-  Future<ProfileInfo> profileInfo = Future.value(ProfileInfo(user_id: "", username: "Atleta", email: "", age: 0, kg_or_lbs: "kg", cm_or_inches: "cm", km_or_miles: "km", male_female: "", weight: 0, height: 0));
+  Future<ProfileInfo> profileInfo = Future.value(ProfileInfo(user_id: "", username: "Loading...", email: "", age: 0, kg_or_lbs: "kg", cm_or_inches: "cm", km_or_miles: "km", male_female: "", weight: 0, height: 0));
   Future<List<ExerciseCatalog>>? exerciseCatalogList = fetchExerciseCatalogInfo();
   Future<int> numWorkoutSession = Future.value(0);
   Future<List<WorkoutSession>?>  history = Future.value([]);
   Future<List<WorkoutSession>?> routines = Future.value([]);
+  Future< List<List<SkillTreeNode>> > skillsList = fetchSkillsList();
 
   bool internetConnection = false;
+  int defaultRestSeconds = 120;
 
 
   void initData() async {
@@ -56,6 +63,7 @@ class WorkoutDataManager extends ChangeNotifier{
       await loadProfileInfoFromSharedPref();
       await loadExCatalogFromSharedPref();
       await loadPfpFromSharedPref();
+      await loadSkillsListFromSharedPref();
 
       //These 2 are none offline
       history = Future.value([]);
@@ -65,15 +73,20 @@ class WorkoutDataManager extends ChangeNotifier{
       //--ONLINE--
       profileInfo = fetchProfileInfo();
       exerciseCatalogList = fetchExerciseCatalogInfo();
+      skillsList = fetchSkillsList();
 
       //Called when they're done loading from online
       profileInfo.then((data) => saveProfileInfoToSharedPref(data));
       exerciseCatalogList?.then((data) => saveExCatalogToSharedPref());
+      skillsList.then((data) => saveSkillsListToSharedPref());
 
+      //cant be accessed offline we don't save em
       numWorkoutSession = fetchNumberWorkoutSessions();
       history = fetchWorkoutSessions();
       routines = fetchRoutines();
     }
+    loadDefaultTimerFromSharedPref();
+
     notifyListeners();
   }
 
@@ -267,6 +280,7 @@ class WorkoutDataManager extends ChangeNotifier{
       print(e); rethrow;
     }
   }
+
 
   //---ACTIVE WS SHARED PREFERENCES---
 
@@ -622,6 +636,85 @@ class WorkoutDataManager extends ChangeNotifier{
     }
   }
 
+  //---DEFAULT TIMER SHARED-PREFS---
+  Future<void> saveDefaultTimerToSharedPref(int seconds) async {
+    try{
+      SharedPreferences sPrefs = await SharedPreferences.getInstance();
+      String? jsonString = jsonEncode(seconds);
+      sPrefs.setString(sharedPrefDefTimer, jsonString);
+      print("Saved default rest timer to sp");
+    } catch(e){
+      print(e);
+    }
+  }
+  Future<void> loadDefaultTimerFromSharedPref() async {
+    try{
+      SharedPreferences sPrefs = await SharedPreferences.getInstance();
+      String? jsonString = sPrefs.getString(sharedPrefDefTimer);
+      if(jsonString != null){
+        defaultRestSeconds = jsonDecode(jsonString);
+        print("loaded default rest timer from sp");
+      }
+    } catch(e){
+      print(e);
+    }
+  }
+
+  //---SKILLS LIST SHARED-PREFS---
+
+  Future<void> saveSkillsListToSharedPref() async {
+    final sPrefs = await SharedPreferences.getInstance();
+
+    List<List<SkillTreeNode>> loadedSkillList = await skillsList;
+
+    List<List<Map<String, dynamic>>> data = loadedSkillList.map((list){
+      return list.map((node) => node.toJson()).toList();
+    }).toList();
+
+    String jsonString = jsonEncode(data);
+
+    await sPrefs.setString(sharedPrefSkillsList, jsonString);
+    notifyListeners();
+  }
+  Future<void> loadSkillsListFromSharedPref() async {
+    final sPrefs = await SharedPreferences.getInstance();
+    String? jsonString = sPrefs.getString(sharedPrefSkillsList);
+
+    try{
+      if(jsonString!=null){
+        List<dynamic> jsonSkillsList = jsonDecode(jsonString);
+        List<List<SkillTreeNode>> skillsList = jsonSkillsList.map((innerList) {
+          return (innerList as List<dynamic>).map((nodeMap) {
+            return SkillTreeNode.fromJsonMap(nodeMap as Map<String, dynamic>);
+          }).toList();
+        }).toList();
+
+        List<List<SkillTreeNode>> cleanSkillsList = [];
+
+        for(var mainSkillList in skillsList){
+          List<SkillTreeNode> parentOnlyList = [];
+          //  ONLY PARENTS FOR NO DUPLICATES
+          parentOnlyList = mainSkillList.where((element) => element.is_variant == false ).toList();
+
+          for(var node in mainSkillList){ //iterate through mainSkillList because that's where the variants are at!
+            if(node.is_variant && node.parent_name != null){
+              //find the parent by checking node's parentName and re-cycle through the list to find the actual parent's name
+              final parentNode = mainSkillList.firstWhere((parentNode) => node.parent_name == parentNode.name);
+              parentNode.variant = node;
+            }
+          }
+          cleanSkillsList.add(parentOnlyList);
+        }
+        this.skillsList = Future.value(cleanSkillsList);
+        notifyListeners();
+      }
+    } catch(e){
+      print(e);
+    }
+
+  }
+
+
   //Needed to re-fetch history and n of workout sessions so when adding or deleting a workout session, the page is updated
   Future<void> reFetchHistory() async{
     if(internetConnection){
@@ -697,6 +790,7 @@ class WorkoutDataManager extends ChangeNotifier{
         await loadProfileInfoFromSharedPref();
         await loadFromSharedPreferences();
         await loadExCatalogFromSharedPref();
+        await loadSkillsListFromSharedPref();
 
       }else{
         internetConnection = true;
@@ -708,6 +802,7 @@ class WorkoutDataManager extends ChangeNotifier{
         load_InsertOfflineCustomExFromSharedPref(); //Whenever internet's on, load the pending cEx
         load_InsertOfflineWSFromSharedPref(); //same as line above, ws
         load_InsertOfflineRoutinesFromSharedPref();
+        saveSkillsListToSharedPref();
 
         notifyListeners();
       }
